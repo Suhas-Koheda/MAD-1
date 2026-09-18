@@ -1,0 +1,695 @@
+ 1. Implementation (5 marks)
+  
+  What to show: Working modules that are executable and yours.
+  
+  Run this and walk them through it step by step:
+  
+  source venv/bin/activate
+  python3 app.py --demo
+  
+  Type: What is the capital of Australia?
+  
+  Point out what they see on screen:
+  
+  - STEP 1 table → "These are 3 independent agents — Web (DuckDuckGo), Reference (Wikipedia), Scholarly (Crossref) — each retrieved evidence
+  separately and independently. You can see each agent's exact claim."
+  - STEP 2 table → "The system runs NLI comparison on every pair. All scores show 0.04 contradiction, 0.88 entailment → AGREEMENT. Debate is
+  skipped."
+  - STEP 4 → "Direct answer with sources."
+  
+  Then type: When was India's National Education Policy introduced?
+  
+  - STEP 1 → "Web says 2020, Wikipedia says 1986, Scholarly says 2020. Different claims from different sources."
+  - STEP 2 → "NLI gives contradiction score 0.91 between web and Wikipedia → DISAGREEMENT gate opens."
+  - STEP 3 → "Conflict classified as TEMPORAL. Side-by-side claims shown. Debate runs: Proposer → Critic → Reviser, 3 rounds. Judge picks the more
+  recent authoritative source."
+  - STEP 4 → "Resolved answer with real sources."
+  
+  What modules to mention:
+  
+  - agents/ — 3 independent retrieval agents
+  - evidence/aggregator.py — NLI-based gate decision
+  - conflict/classifier.py — 5 conflict types (TEMPORAL, VERSION, CONTEXTUAL, SOURCE, FACTUAL)
+  - debate/ — Proposer → Critic → Reviser → Judge pipeline
+  - output/generator.py — 4 different answer shapes based on evidence state
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  2. Technical Accuracy (5 marks)
+  
+  What to say about each technical decision:
+  
+  Why 3 independent agents?
+  
+  │ "Independence is the core guarantee. Each agent uses a different provider and different search index — DuckDuckGo for general web, Wikipedia
+  for reference facts, Crossref for scholarly papers. They get the same query verbatim, no suffix modification, so any disagreement is genuine,
+  not induced."
+  
+  Why NLI for comparison?
+  
+  │ "We use Natural Language Inference to measure semantic contradiction between claims — not keyword matching. The score ranges 0 to 1. We gate
+  debate at threshold 0.70. Agreement requires ALL pairs above entailment threshold. Disagreement needs only ONE pair above contradiction
+  threshold. This asymmetry is deliberate — you need strong evidence to claim agreement, but one contradiction is enough to trigger debate."
+  
+  Why 5 conflict types?
+  
+  │ "Each type needs a different debate strategy. A temporal conflict needs to check which date the query asked about. A contextual conflict
+  should check whether both claims are correct under different scopes before declaring one wrong. Using a generic strategy for all types would
+  give wrong resolutions."
+  
+  Why Propose → Critique → Revise?
+  
+  │ "This mirrors peer review. The proposer makes an initial argument. Two critics challenge it. The reviser incorporates valid critiques. Early
+  stopping kicks in when rounds converge — if the reviser's output matches the previous round at 95% Jaccard similarity, debate stops. This
+  prevents wasted compute."
+  
+  Why a gate at all?
+  
+  │ "Standard MAD always debates. Our system only debates when evidence disagrees. On agreement queries, we save the 6-8 LLM calls a full debate
+  costs. This is the core efficiency contribution."
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  3. Results Obtained So Far (5 marks)
+  
+  Run the evaluation to generate graphs:
+  
+  python3 -m evaluation.run_experiments --demo
+  
+  Then show results/figures/ — open these 4 images:
+  
+  ┌─────────────────────────┬────────────────────────────────────────┐
+  │ Figure                  │ What to say                            │
+  ├─────────────────────────┼────────────────────────────────────────┤
+  │ debate_trigger_rate.png │ "Proposed MAD only debates when        │
+  │                         │ there's genuine conflict. Standard MAD │
+  │                         │ always debates — wastes calls on       │
+  │                         │ agreement cases."                      │
+  ├─────────────────────────┼────────────────────────────────────────┤
+  │ key_fact_accuracy.png   │ "Accuracy measured by key-fact         │
+  │                         │ presence, not token overlap — a        │
+  │                         │ stricter metric."                      │
+  ├─────────────────────────┼────────────────────────────────────────┤
+  │ llm_calls_ok.png        │ "Single LLM uses 1 call. Our system    │
+  │                         │ uses more on conflict queries, but     │
+  │                         │ saves calls on agreement queries       │
+  │                         │ compared to Standard MAD."             │
+  ├─────────────────────────┼────────────────────────────────────────┤
+  │ error_rates.png         │ "Retrieval failure and error rates     │
+  │                         │ across all 6 system variants."         │
+  └─────────────────────────┴────────────────────────────────────────┘
+  
+  Key numbers to say:
+  
+  - "Our system has 5 conflict types: TEMPORAL, VERSION, CONTEXTUAL, SOURCE, FACTUAL"
+  - "3 debate stages per round: Propose, Critique, Revise"
+  - "Early stopping at 95% Jaccard similarity — saves rounds"
+  - "6 systems compared: Single LLM, Standard MAD, Proposed MAD, No-Gate, No-Typed-Strategy, No-Relevance-Filter"
+  - "78 automated tests, all passing"
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  4. Presentation and Clarity (5 marks)
+  
+  Likely panel questions and answers:
+  
+  Q: What is the main contribution of your system?
+  
+  │ "Standard MAD always debates regardless of whether sources agree. We add an evidence gate — debate only triggers on genuine disagreement,
+  saving compute. And when debate triggers, we use conflict-type-specific strategies instead of one generic prompt."
+  
+  Q: How do you know if two claims contradict?
+  
+  │ "We use Natural Language Inference — a model that scores how much claim A contradicts claim B on a 0-1 scale. We run it in both directions and
+  take the stronger score. Above 0.70 → contradiction. All pairs above 0.70 entailment → agreement. Anything else → uncertain."
+  
+  Q: What if both sources are wrong?
+  
+  │ "The judge evaluates evidence quality, source authority, and reasoning quality. The system produces a confidence score. If debate doesn't
+  complete, it explicitly says 'conflict unresolved' instead of fabricating an answer."
+  
+  Q: Why NLI and not just cosine similarity?
+  
+  │ "Cosine similarity measures topic overlap — two claims about the same topic score high even if they disagree. NLI specifically measures
+  logical entailment vs contradiction. 'The policy was introduced in 2020' and 'The policy was introduced in 1986' are about the same topic but
+  contradict each other."
+  
+  Q: What are the 5 conflict types?
+  
+  │ "TEMPORAL — different dates. VERSION — different software versions. CONTEXTUAL — different populations or conditions (adults vs children).
+  SOURCE — credibility gap between sources. FACTUAL — direct incompatible facts."
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  Your demo command — run exactly this:
+  
+  cd /home/sasi-boss/Desktop/MAD-1
+  source venv/bin/activate
+  python3 app.py --demo
+  
+  Query 1 (shows AGREEMENT, debate skipped):
+  
+  What is the capital of Australia?
+  
+  Query 2 (shows full TEMPORAL conflict + debate):
+  
+  When was India's National Education Policy introduced?
+  
+  Query 3 if they want more (CONTEXTUAL conflict):
+  
+  Is aspirin safe to take?
+ 
+▸ Credits: 1.11 • Time: 59s
+────────────────────────────────────────────────────────────────────────
+  can u please tell me from starting to ending how this project works?cause i wanna understand what are all those present in here.and mainly in   
+  explanation if u tell "it reviews or it does this" like this,provide a proper explantion like how it does that also.cause while i present they  
+  will ask these kinda questions. and also pls in brief tell what each term is also(one time enough). terms in the sense,what is fixator,what is  
+  agent in web,waht is reference agents ,what is schloarly and total how many agents are there, what do they do, and how do they debate, where do 
+  they debate in a file or what?, what and where are the metrics and what do those metrics mean?,incase if any other metrics can be added tell    
+  those also,only my command u can add those extra metrics.completly everything like incase of issues or errors waht happens and for waht we call 
+  llm here?,literally in detail i want everything.like this is the first time am looking at these things. and also while explaning tell me the    
+  names of the files and the function its present in at the term itself while explaining.cause after all the explanaiton i cant just go and search
+  for every term in code.so while explaining itself u specify.                                                                                    
+ 
+• Complete Project Explanation — Evidence-MAD
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  What is this project trying to solve?
+  
+  When you ask a question like "When was India's NEP introduced?", different websites give different answers — one says 1986, another says 2020. A
+  normal AI just picks one and answers. This project does something smarter:
+  
+  1. It sends 3 independent agents to search independently
+  2. It compares what each found
+  3. If they agree → answer directly
+  4. If they disagree → run a structured debate to figure out who is right
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  The Big Picture Flow
+  
+  You type a question
+          ↓
+  3 agents search independently (parallel)
+          ↓
+  Each agent's result is cleaned into one claim
+          ↓
+  NLI compares all pairs of claims
+          ↓
+  AGREE? → Answer directly, skip debate
+  DISAGREE? → Classify conflict type → Run debate → Judge → Answer
+  UNCERTAIN? → Report both findings
+  INSUFFICIENT? → Report failure
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  File-by-File, Function-by-Function
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  app.py — The Brain / Main Pipeline
+  
+  This is the file you run. python3 app.py --demo starts here.
+  
+  MADSystem class — the entire pipeline lives here. When you create it, it sets up every component.
+  
+  MADSystem.solve(query) function — this is the main function. Every time you type a question, this runs. It does these steps in order:
+  
+  1. Calls the router to get evidence from agents
+  2. Normalizes each agent's raw results into one clean claim
+  3. Calls the aggregator to compare claims and decide state
+  4. If INSUFFICIENT → retries failed agents once
+  5. Branches into AGREEMENT / DISAGREEMENT / UNCERTAIN / INSUFFICIENT
+  6. Saves a trace file to results/
+  7. Returns the trace
+  
+  run_interactive() function — the CLI loop. Reads your keyboard input, calls solve(), prints the 4-step display you see in the terminal.
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  config.py — All Settings
+  
+  Reads from your .env file. Every threshold, model name, and API key lives here as a Settings class using pydantic_settings.
+  
+  Key settings:
+  
+  - LLM_API_KEY — your Groq API key
+  - LLM_MODEL — currently qwen/qwen3.8-27b on Groq
+  - DISAGREEMENT_THRESHOLD = 0.70 — contradiction score must exceed this to trigger debate
+  - ENTAILMENT_THRESHOLD = 0.70 — all pairs must exceed this for agreement
+  - NLI_MODE = mock — uses pattern-based NLI (fast, no model download). Set to transformers for real NLI model
+  - MAX_DEBATE_ROUNDS = 3 — debate runs at most 3 rounds
+  
+  settings.validate() function — called on startup. Raises an error immediately if LLM_API_KEY is empty in LIVE mode, rather than letting it fail
+  silently later.
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  run_mode.py — FIXTURE vs LIVE
+  
+  RunMode enum — two values: FIXTURE and LIVE.
+  
+  - LIVE mode (python3 app.py) — real internet search, real LLM calls. Needs API key.
+  - FIXTURE mode (python3 app.py --demo) — all evidence comes from data/fixtures.json, no internet, no API calls. Instant responses. Used for
+  demos.
+  
+  FixtureStore class — loads data/fixtures.json. When you ask "What is the capital of Australia?" in demo mode, it looks up that exact query
+  string in the file and returns the pre-written agent results. If you ask something not in the file, it raises FixtureNotFoundError immediately
+  (no silent fallback — this is intentional so you know exactly what's available).
+  
+  data/fixtures.json — contains 10 pre-written cases covering all scenarios: 2 agreements, 4 disagreements (one per conflict type), 1 uncertain, 1
+  one-agent-fails, 1 two-agents-fail, 1 all-agents-fail.
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  The 3 Agents
+  
+  All agents live in agents/search_agent.py. There are exactly 3 agents, each a Python class. They all inherit from BaseAgent in
+  agents/base_agent.py.
+  
+  Agent 1 — WebAgent (agent_id: web_agent)
+  
+  - Provider: DuckDuckGo HTML search
+  - How it works: Sends an HTTP GET to https://html.duckduckgo.com/html/?q=your+query. Parses the HTML response using regex to extract titles,
+  snippets, and links. No API key needed.
+  - File: agents/search_agent.py, class WebAgent, method _duckduckgo_search()
+  
+  Agent 2 — ReferenceAgent (agent_id: reference_agent)
+  
+  - Provider: Wikipedia public API
+  - How it works: Calls https://en.wikipedia.org/w/api.php with action=query&list=search. Wikipedia returns JSON with article titles and text
+  snippets. No API key needed.
+  - File: agents/search_agent.py, class ReferenceAgent, method _wikipedia_search()
+  
+  Agent 3 — ScholarlyAgent (agent_id: scholarly_agent)
+  
+  - Provider: Crossref scholarly metadata API
+  - How it works: Calls https://api.crossref.org/works to search academic paper titles and abstracts. Returns DOI links and journal names. No API
+  key needed. Only used for research-style queries (queries containing words like "study", "meta-analysis", "clinical trial" etc.).
+  - File: agents/search_agent.py, class ScholarlyAgent, method _crossref_search()
+  
+  What retrieve() does (common to all 3)
+  
+  Each agent's retrieve(query) method (in SearchAgent class, agents/search_agent.py):
+  
+  1. Calls its provider's search function
+  2. Gets back a list of {title, snippet, link} dicts
+  3. Wraps them in Source objects (from evidence/models.py)
+  4. Returns an Evidence object containing all sources
+  
+  Important: All 3 agents get the exact same query string verbatim — no modifications. This ensures independence.
+  
+  How they run in parallel
+  
+  agents/router.py, QueryRouter.execute() function — uses Python's ThreadPoolExecutor with 3 worker threads. All 3 agents search simultaneously.
+  This is why retrieval takes ~2 seconds instead of ~6.
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  Evidence Normalization — evidence/normalizer.py
+  
+  Each agent returns 5 raw search results. Those are noisy — irrelevant pages, partial snippets. The normalizer converts them into one clean claim
+  per agent.
+  
+  EvidenceNormalizer.normalize() function:
+  
+  Stage 1 — Relevance filter (_is_relevant() function):
+  
+  - Extracts content words from the query (removes stopwords like "the", "is", "what")
+  - Checks each search result — if title+snippet share fewer than 1 content word with the query, discard it
+  - This removes completely off-topic results (e.g. a Wikipedia article about a film when you asked about a chemical)
+  
+  Stage 2 — LLM normalization (_llm_normalize() function):
+  
+  - Sends the surviving snippets to the LLM with a prompt: "Given these snippets, write one sentence that answers this query. Also extract any
+  date, version number, and scope."
+  - LLM role used here: "normalize" — tracked in llm_client.call_report()
+  - Returns a NormalizedClaim object containing: text (the one-sentence answer), source (which URL it came from), date, version, scope
+  - If LLM says no snippet answers the query → NO_RELEVANT_RESULTS status
+  
+  So after normalization, instead of 5 noisy snippets per agent, you have 1 clean claim per agent with metadata.
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  Evidence Models — evidence/models.py
+  
+  This file defines all the data structures. Key ones:
+  
+  - Source — a URL with title and snippet. Everything is traceable to a source.
+  - NormalizedClaim — one sentence answer + source + date + version + scope
+  - AgentEvidence — one agent's full result: status (OK / NO_RELEVANT_RESULTS / RETRIEVAL_FAILED), list of claims, list of sources
+  - AgentEvidence.is_usable — property that returns True only if status is OK AND claims list is not empty. The aggregator uses this to decide
+  whether an agent's result counts.
+  - EvidenceDecision — the output of the aggregator: state (AGREEMENT/DISAGREEMENT/UNCERTAIN/INSUFFICIENT), pairwise NLI scores, which agents are
+  usable, which failed, and the top conflicting pair
+  - ExecutionTrace — everything that happened in one solve: query, all agent evidence, decision, conflict, debate rounds, judge result, final
+  answer, metrics, timestamps. Saved as JSON to results/
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  NLI — The Core Comparison Engine
+  
+  NLI = Natural Language Inference. It answers: "Does sentence A contradict sentence B?"
+  
+  It gives 3 scores for any pair of sentences:
+  
+  - contradiction_score — how much A and B conflict (0.0 to 1.0)
+  - entailment_score — how much A supports B (0.0 to 1.0)
+  - neutral_score — how unrelated they are (0.0 to 1.0)
+  
+  File: evidence/disagreement_detector.py
+  
+  Two implementations:
+  
+  MockNLIDetector (used when NLI_MODE=mock in .env):
+  
+  - Uses _pattern_predict() function — a set of rules
+  - Detects different years (e.g. 2020 vs 1986 → contradiction 0.91)
+  - Detects different version numbers (e.g. 3.13 vs 3.14 → contradiction 0.89)
+  - Detects scope pairs (adults vs children → contradiction 0.91)
+  - Detects negation pairs (safe vs dangerous → contradiction 0.91)
+  - 3+ shared meaningful words → entailment 0.88
+  - Otherwise → neutral 0.60
+  - Fast, no model download, works offline
+  
+  NLIDetector (used when NLI_MODE=transformers):
+  
+  - Downloads and runs a real RoBERTa model: ynie/roberta-large-snli_mnli_fever_anli_R1_R2_R3-nli
+  - Uses HuggingFace pipeline() with {"text": premise, "text_pair": hypothesis} input format
+  - Runs in both directions (A→B and B→A) and takes the stronger contradiction score
+  - Accurate for any sentence pair, not just known patterns
+  - Slow on first run (model download ~1.5GB), fast after
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  Evidence Aggregator — evidence/aggregator.py
+  
+  EvidenceAggregator.decide() function — takes all agent evidence, returns one EvidenceDecision.
+  
+  The decision rule (written once, never duplicated):
+  
+  usable = agents where is_usable == True
+  if len(usable) <= 1  →  INSUFFICIENT
+  
+  for every pair (A,B) in usable:
+      run NLI → get contradiction_score, entailment_score
+  
+  if ANY pair contradiction_score >= 0.70  →  DISAGREEMENT
+  elif ALL pairs entailment_score >= 0.70  →  AGREEMENT
+  else                                     →  UNCERTAIN
+  
+  Why this asymmetry? Disagreement needs only 1 pair. If web says 2020 and Wikipedia says 1986, that's enough — even if scholarly agrees with web.
+  Agreement needs ALL pairs — 2 agents entailing + 1 neutral is NOT agreement, it's UNCERTAIN. This makes the system conservative: it won't claim
+  agreement unless all sources are consistent.
+  
+  Also records top_conflict — the pair with the highest contradiction score. This is what gets passed to the debate.
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  Conflict Classifier — conflict/classifier.py
+  
+  Only runs when state is DISAGREEMENT.
+  
+  ConflictClassifier.classify() function:
+  
+  - Sends the two conflicting claims + query to the LLM
+  - Prompt asks: "Is this conflict TEMPORAL, VERSION, CONTEXTUAL, SOURCE, or FACTUAL?"
+  - LLM role: "classifier"
+  - Returns ClassificationResult with type, confidence, explanation, and status
+  
+  5 Conflict Types:
+  
+  - TEMPORAL — claims differ because they refer to different dates/times. Example: NEP 1986 vs 2020
+  - VERSION — claims differ because they're about different software/product versions. Example: Python 3.13 vs 3.14
+  - CONTEXTUAL — claims differ because they apply to different populations or conditions. Example: aspirin safe for adults, dangerous for children
+  - SOURCE — claims differ because one source is authoritative (peer-reviewed) and another is not (blog). Example: MMR vaccine controversy
+  - FACTUAL — direct incompatible facts about the same thing. Example: "Napoleon was 5'2" vs "Napoleon was 5'7"
+  
+  Fallback: If LLM fails, _classify_by_patterns() runs instead (pattern matching on years, version numbers, scope words). Returns status=FALLBACK
+   so you know it wasn't an LLM result.
+  
+  ────────────────────────────────────────────────────────────────────────
+  
+  Debate — debate/ folder
+  
+  The debate has 4 files. It only runs on DISAGREEMENT state.
+  
+  How the debate works technically
+  
+  debate/manager.py — DebateManager.run_debate() function — orchestrates the loop:
+  
+  For round 1, 2, 3:
+      1. Proposer generates an argument
+      2. Validate it (>50 chars, not empty)  ← if invalid, stop immediately
+      3. Critic generates 2 critiques
+      4. Check for "no substantive objection" → stop early if critic is satisfied
+      5. Reviser incorporates critiques into a revised argument
+      6. Check convergence: if this revision is 95% similar to previous → stop early
+  Returns DebateOutcome(status, stop_reason, rounds_used, failed_stages)
+  
+  Early stopping (stop_reason):
+  
+  - converged — revision text is 95%+ similar to last round (Jaccard similarity). No point continuing.
+  - no_objection — critic explicitly says SUBSTANTIVE_OBJECTION: false. Debate is settled.
+  - max_rounds — hit the 3-round cap.
+  - stage_failure — LLM failed at proposer/critic/reviser → stops immediately, records which stage failed.
+  
+  debate/proposer.py — Proposer.propose() function
+  
+  Generates the initial argument. Uses CONFLICT_STRATEGIES dict — a different system prompt for each of the 5 conflict types.
+  
+  - TEMPORAL strategy tells the LLM: "Check the date each claim was recorded. If a claim is dated after the query's requested period, exclude it."
+  - VERSION strategy: "Check if both claims refer to the same version. If different versions, both may be correct."
+  - CONTEXTUAL strategy: "Check scope fields. If scopes differ, the contradiction may dissolve."
+  - SOURCE strategy: "Evaluate source authority — prefer peer-reviewed over blogs."
+  - FACTUAL strategy: "Compare claims directly against evidence."
+  
+  LLM role: "proposer"
+  
+  debate/critic.py — Critic.critique() function
+  
+  Receives the proposal and generates 2 separate critiques challenging it. Also outputs SUBSTANTIVE_OBJECTION: true/false — if false, the debate
+  manager stops early. LLM role: "critic"
+  
+  debate/reviser.py — Reviser.revise() function
+  
+  Receives original proposal + 2 critiques. Produces a revised, strengthened argument that addresses the critiques. LLM role: "reviser"
+  
+  debate/judge.py — Judge.evaluate() function
+  
+  Only called if debate_outcome.status == "completed" — if debate failed partway, judge is skipped and judge_result = None.
+  
+  Receives: the two conflicting NormalizedClaim objects with full source metadata, the debate transcript, and the conflict type. Asks LLM: "Which
+  claim has stronger evidence? Give scores." Returns JudgeResult with winner, reason, evidence_score, confidence. LLM role: "judge"
+  
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  
+  Output Generator — output/generator.py
+  
+  AnswerGenerator.generate() function — produces the final displayed answer. Four completely different shapes based on state:
+  
+  - AGREEMENT → LLM writes a direct answer from the agreed claims. No bullet dump. LLM role: "answer"
+  - DISAGREEMENT + completed debate → "A TEMPORAL conflict was detected. Resolution: [winning claim]. Judge's reasoning: [reason]"
+  - DISAGREEMENT + failed debate → "A conflict was detected but debate did not complete. Please consult sources directly."
+  - UNCERTAIN → "Evidence neither clearly agreed nor conflicted. Different sources found: [list]"
+  - INSUFFICIENT → "Insufficient evidence. Failed agents: [list with reasons]"
+  
+  Also reports independent_agents_agreeing separately from source_count — 3 agents agreeing is different from 9 URLs (which could all be the same
+  3 agents × 3 sources each).
+  
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  
+  LLM Client — llm_client.py
+  
+  LLMClient class — the single shared LLM client. Currently points to Groq (https://api.groq.com/openai/v1), model qwen/qwen3.8-27b.
+  
+  chat(prompt, role="...") function — sends one message to the LLM, returns text response. The role parameter is required — it labels every call
+  so you know exactly which component made it.
+  
+  chat_json(prompt, role="...") function — same but expects JSON back. Extracts JSON from the response even if the LLM wraps it in markdown code
+  blocks.
+  
+  call_report() function — returns a dict showing how many OK and failed calls each role made. Example: {"normalize": {"ok": 3, "failed": 0},
+  "classifier": {"ok": 1, "failed": 0}, "proposer": {"ok": 3, "failed": 0}, ...}
+  
+  LLMError exception — raised on any LLM failure (bad key, network error, bad JSON). Never silently returns a fake response. Every component that
+  calls LLM lets this propagate up to the debate manager, which records the failure properly.
+  
+  Where LLM is used and with which role:
+  
+  ┌────────────┬──────────────────────────────────┬──────────────────────────────────────┐
+  │ Role       │ Where                            │ Purpose                              │
+  ├────────────┼──────────────────────────────────┼──────────────────────────────────────┤
+  │ normalize  │ evidence/normalizer.py           │ Turn snippets into one claim         │
+  ├────────────┼──────────────────────────────────┼──────────────────────────────────────┤
+  │ classifier │ conflict/classifier.py           │ Identify conflict type               │
+  ├────────────┼──────────────────────────────────┼──────────────────────────────────────┤
+  │ proposer   │ debate/proposer.py               │ Generate initial argument            │
+  ├────────────┼──────────────────────────────────┼──────────────────────────────────────┤
+  │ critic     │ debate/critic.py                 │ Challenge the argument               │
+  ├────────────┼──────────────────────────────────┼──────────────────────────────────────┤
+  │ reviser    │ debate/reviser.py                │ Improve the argument                 │
+  ├────────────┼──────────────────────────────────┼──────────────────────────────────────┤
+  │ judge      │ debate/judge.py                  │ Pick the winner                      │
+  ├────────────┼──────────────────────────────────┼──────────────────────────────────────┤
+  │ answer     │ output/generator.py              │ Write the final answer               │
+  ├────────────┼──────────────────────────────────┼──────────────────────────────────────┤
+  │ single     │ evaluation/systems/single_llm.py │ Baseline: one LLM call, no retrieval │
+  └────────────┴──────────────────────────────────┴──────────────────────────────────────┘
+  
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  
+  Metrics — evaluation/metrics.py
+  
+  MetricsCalculator class — takes a list of ExecutionTrace objects and computes all metrics.
+  
+  Every trace is saved as a JSON file in results/. The metrics calculator reads them.
+  
+  Current Metrics and What They Mean
+  
+  ┌──────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Metric                                       │ What it means                                                                               │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ debate_trigger_rate                          │ % of queries that triggered debate. Lower = system is efficiently skipping unnecessary      │
+  │                                              │ debates                                                                                     │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ key_fact_accuracy                            │ % of answers containing all required facts. Stricter than word overlap — a verbose wrong    │
+  │                                              │ answer scores 0                                                                             │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ llm_judge_accuracy                           │ % of answers the LLM judge rated as correct vs reference answer                             │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ conflict_detection_accuracy                  │ How often debate triggered on queries where conflict was expected                           │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ precision                                    │ Of all debates triggered, what % were on genuinely conflicting queries                      │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ recall                                       │ Of all conflicting queries, what % actually triggered debate                                │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ f1                                           │ Harmonic mean of precision and recall                                                       │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ unnecessary_debate_rate                      │ % of debates triggered when sources actually agreed — wasted compute                        │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ missed_conflict_rate                         │ % of genuine conflicts that didn't trigger debate                                           │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ conflict_classification_accuracy_llm_success │ How often the LLM correctly identified the conflict type (only counts LLM_SUCCESS, not      │
+  │                                              │ fallback)                                                                                   │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ avg_latency_seconds                          │ Average time per query                                                                      │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ latency_p50                                  │ Median latency — 50% of queries finish within this time                                     │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ latency_p95                                  │ 95th percentile — worst-case for most queries                                               │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ avg_llm_calls_ok                             │ Average successful LLM calls per query                                                      │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ avg_llm_calls_failed                         │ Average failed LLM calls — should be 0                                                      │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ avg_debate_rounds                            │ Average rounds used when debate triggers                                                    │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ efficiency_llm_calls_saved                   │ (debates avoided) × (avg calls per debate) — headline efficiency number                     │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ retrieval_failure_rate                       │ % of agents that failed to retrieve anything                                                │
+  ├──────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ insufficient_evidence_rate                   │ % of queries where too few agents had usable results                                        │
+  └──────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────┘
+  
+  Extra Metrics You Can Add
+  
+  These are not implemented yet — you can add them by editing evaluation/metrics.py in the calculate_metrics() function:
+  
+  # Add these to the return dict in calculate_metrics():
+  
+  # 1. Average contradiction score when debate triggers
+  avg_contra = statistics.mean(
+      r.contradiction_score for r in self.results
+      if r.debate_triggered and r.contradiction_score
+  ) if any(r.debate_triggered for r in self.results) else 0.0
+  
+  # 2. Debate early stop rate (how often it converged before max rounds)
+  early_stops = sum(
+      1 for r in self.results
+      if r.metrics.get("debate_stop_reason") in ("converged", "no_objection")
+  )
+  early_stop_rate = early_stops / max(sum(1 for r in self.results if r.debate_triggered), 1)
+  
+  # 3. Average source count per answer
+  avg_sources = statistics.mean(
+      r.metrics.get("source_count", 0) for r in ok_traces
+  ) if ok_traces else 0.0
+  
+  # 4. Per-conflict-type accuracy
+  conflict_acc = {}
+  for ctype in ["temporal", "version", "contextual", "source", "factual"]:
+      typed = [r for r in self.results if r.conflict and r.conflict.type.value == ctype]
+      correct = [r for r in typed if r.router_result.get("expected_conflict_type") == ctype]
+      conflict_acc[ctype] = len(correct) / len(typed) if typed else 0.0
+  
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  
+  Error Handling — What Happens When Things Go Wrong
+  
+  ┌───────────────────────────────────────────┬─────────────────────────────────┬──────────────────────────────────────────────────────────────┐
+  │ Situation                                 │ Where it's caught               │ What happens                                                 │
+  ├───────────────────────────────────────────┼─────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ Agent search fails (network timeout, 429) │ agents/router.py execute()      │ Agent marked RETRIEVAL_FAILED with reason. Other agents      │
+  │                                           │                                 │ continue.                                                    │
+  ├───────────────────────────────────────────┼─────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ Only 1 agent has usable results           │ evidence/aggregator.py decide() │ INSUFFICIENT state. _retry_failed_agents() in app.py retries │
+  │                                           │                                 │ once.                                                        │
+  ├───────────────────────────────────────────┼─────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ LLM normalization fails                   │ evidence/normalizer.py          │ Uses first raw snippet as fallback claim                     │
+  ├───────────────────────────────────────────┼─────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ LLM classifier fails                      │ conflict/classifier.py          │ Pattern-based fallback runs, status=FALLBACK recorded        │
+  ├───────────────────────────────────────────┼─────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ LLM debate stage fails                    │ debate/manager.py               │ stage_failure stop reason, partial or failed status          │
+  ├───────────────────────────────────────────┼─────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ Judge fails                               │ debate/judge.py                 │ Returns None. Answer says "conflict unresolved"              │
+  ├───────────────────────────────────────────┼─────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ FIXTURE query not found                   │ run_mode.py FixtureStore        │ FixtureNotFoundError — clear message showing available       │
+  │                                           │                                 │ queries                                                      │
+  ├───────────────────────────────────────────┼─────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ LLM API key missing                       │ config.py validate()            │ Raises on startup immediately, before any query runs         │
+  └───────────────────────────────────────────┴─────────────────────────────────┴──────────────────────────────────────────────────────────────┘
+  
+  ExecutionTrace.error field — if anything uncaught happens, the exception message goes here and the trace is still saved. The CLI shows it in
+  red. Nothing is silently swallowed.
+  
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  
+  The 6 Systems in Evaluation — evaluation/systems/
+  
+  ┌─────────────────────────┬─────────────────┬──────────────────────────────────────────────────────────────────────┐
+  │ System                  │ File            │ What it does                                                         │
+  ├─────────────────────────┼─────────────────┼──────────────────────────────────────────────────────────────────────┤
+  │ SingleLLMSystem         │ single_llm.py   │ One LLM call, zero retrieval. Baseline.                              │
+  ├─────────────────────────┼─────────────────┼──────────────────────────────────────────────────────────────────────┤
+  │ StandardMADSystem       │ standard_mad.py │ Real retrieval, always debates even on agreement.                    │
+  ├─────────────────────────┼─────────────────┼──────────────────────────────────────────────────────────────────────┤
+  │ ProposedMADSystem       │ proposed_mad.py │ Full system: gate + typed strategies.                                │
+  ├─────────────────────────┼─────────────────┼──────────────────────────────────────────────────────────────────────┤
+  │ NoGateSystem            │ proposed_mad.py │ Gate disabled, always debates, but uses typed strategies.            │
+  ├─────────────────────────┼─────────────────┼──────────────────────────────────────────────────────────────────────┤
+  │ NoTypedStrategySystem   │ proposed_mad.py │ Gate works, but overrides conflict type to UNKNOWN (generic prompt). │
+  ├─────────────────────────┼─────────────────┼──────────────────────────────────────────────────────────────────────┤
+  │ NoRelevanceFilterSystem │ proposed_mad.py │ Relevance filter disabled, noisy evidence passes through.            │
+  └─────────────────────────┴─────────────────┴──────────────────────────────────────────────────────────────────────┘
+  
+  These ablations let you say: "The gate alone saves X calls. Typed strategies alone improve accuracy by Y%. Both together give the best results."
+  
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  
+  Trace Files — results/
+  
+  Every single query saves a JSON file: results/trace_<8hex>.json
+  
+  Open any one and you'll see:
+  
+  - query — what was asked
+  - agent_evidence — what each agent retrieved, their status, claims, sources
+  - evidence_decision — state, pairwise NLI scores, top conflict
+  - conflict — type, explanation, the two conflicting claims
+  - debate_rounds — each round's proposer/critic/reviser content
+  - judge_result — winner, reason, scores
+  - final_answer — the text shown to user
+  - metrics — latency, LLM calls by role, evidence state, etc.
+
