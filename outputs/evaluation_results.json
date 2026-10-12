@@ -1,0 +1,204 @@
+{
+  "Evidence Gate": {
+    "query": "What is the capital of Australia?",
+    "evidence_state": "agreement",
+    "debate_triggered": false,
+    "passed": true,
+    "latency_seconds": 0.001543283462524414,
+    "llm_calls": 0
+  },
+  "Disagreement Triggers Debate": {
+    "query": "When was India's National Education Policy introduced?",
+    "evidence_state": "disagreement",
+    "debate_triggered": true,
+    "conflict_type": "temporal",
+    "debate_rounds": [
+      "round_number=1 proposer_argument=DebateArgument(id='d33d0cff', round_number=1, role='proposer', agent_id='proposer', content='Proposal (Round 1): Analysing the temporal conflict.\\n\\nSource A states: \"India\\'s National Education Policy was introduced in 2020, approved by the Union Cabinet on 29 July 2020.\"\\nSource B states: \"India\\'s National Education Policy was introduced in 1986 under Prime Minister Rajiv Gandhi.\"\\n\\nThese claims refer to different time points. The date metadata confirms this is a genuine temporal disagreement, not a factual error. To resolve this, we must determine which date is most relevant to the query. The more recent and primary source should take precedence unless the query specifically targets a historical date.', evidence_refs=['agent_a', 'agent_b'], conflict_type=<ConflictType.TEMPORAL: 'temporal'>, strategy_used='temporal', strategy_text_preview='You are arguing about a temporal disagreement.\\nIMPORTANT: The query may specify a particular date or time period (see QUERY PERIOD below).\\nFor each claim, check its recorded date. If a claim is dated ', created_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 571909)) critic_arguments=[DebateArgument(id='b9983542', round_number=1, role='critic', agent_id='critic_1', content='Critique 1 (Round 1): The proposal correctly identifies the temporal gap but does not weigh source authority. The more recent official source (2020) reflects current policy, while the 1986 reference describes a superseded framework. The proposal should explicitly state which is the operative answer.', evidence_refs=[], conflict_type=<ConflictType.TEMPORAL: 'temporal'>, strategy_used='critique_substantive', strategy_text_preview=None, created_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 571970)), DebateArgument(id='13b2884e', round_number=1, role='critic', agent_id='critic_2', content='Critique 2 (Round 1): The proposal omits that both dates may be correct \u2014 1986 was a real policy, 2020 is the current one. The answer depends entirely on whether the query asks about the original or current policy.', evidence_refs=[], conflict_type=<ConflictType.TEMPORAL: 'temporal'>, strategy_used='critique_substantive', strategy_text_preview=None, created_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 571987))] reviser_argument=DebateArgument(id='eac0374a', round_number=1, role='reviser', agent_id='reviser', content='Revised Position (Round 1): Incorporating both critiques \u2014 the conflict is temporal, not factual. Both dates (1986 and 2020) are historically accurate. The current operative answer is 2020, as this is the most recent and active policy. The 1986 policy is superseded. Resolution: answer with the 2020 date, noting 1986 as the original framework.', evidence_refs=[], conflict_type=<ConflictType.TEMPORAL: 'temporal'>, strategy_used='temporal_revision', strategy_text_preview=None, created_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 572251)) started_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 571840) completed_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 572281)",
+      "round_number=2 proposer_argument=DebateArgument(id='9d3ec2bb', round_number=2, role='proposer', agent_id='proposer', content='Proposal (Round 2): Analysing the temporal conflict.\\n\\nSource A states: \"India\\'s National Education Policy was introduced in 2020, approved by the Union Cabinet on 29 July 2020.\"\\nSource B states: \"India\\'s National Education Policy was introduced in 1986 under Prime Minister Rajiv Gandhi.\"\\n\\nThese claims refer to different time points. The date metadata confirms this is a genuine temporal disagreement, not a factual error. To resolve this, we must determine which date is most relevant to the query. The more recent and primary source should take precedence unless the query specifically targets a historical date.', evidence_refs=['agent_a', 'agent_b'], conflict_type=<ConflictType.TEMPORAL: 'temporal'>, strategy_used='temporal', strategy_text_preview='You are arguing about a temporal disagreement.\\nIMPORTANT: The query may specify a particular date or time period (see QUERY PERIOD below).\\nFor each claim, check its recorded date. If a claim is dated ', created_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 572517)) critic_arguments=[DebateArgument(id='1154a773', round_number=2, role='critic', agent_id='critic_1', content='Critique 1 (Round 2): The proposal correctly identifies the temporal gap but does not weigh source authority. The more recent official source (2020) reflects current policy, while the 1986 reference describes a superseded framework. The proposal should explicitly state which is the operative answer.', evidence_refs=[], conflict_type=<ConflictType.TEMPORAL: 'temporal'>, strategy_used='critique_substantive', strategy_text_preview=None, created_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 572560)), DebateArgument(id='dcec62a0', round_number=2, role='critic', agent_id='critic_2', content='Critique 2 (Round 2): The proposal omits that both dates may be correct \u2014 1986 was a real policy, 2020 is the current one. The answer depends entirely on whether the query asks about the original or current policy.', evidence_refs=[], conflict_type=<ConflictType.TEMPORAL: 'temporal'>, strategy_used='critique_substantive', strategy_text_preview=None, created_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 572592))] reviser_argument=DebateArgument(id='d580e567', round_number=2, role='reviser', agent_id='reviser', content='Revised Position (Round 2): Incorporating both critiques \u2014 the conflict is temporal, not factual. Both dates (1986 and 2020) are historically accurate. The current operative answer is 2020, as this is the most recent and active policy. The 1986 policy is superseded. Resolution: answer with the 2020 date, noting 1986 as the original framework.', evidence_refs=[], conflict_type=<ConflictType.TEMPORAL: 'temporal'>, strategy_used='temporal_revision', strategy_text_preview=None, created_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 572655)) started_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 572473) completed_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 572669)",
+      "round_number=3 proposer_argument=DebateArgument(id='b5e6d191', round_number=3, role='proposer', agent_id='proposer', content='Proposal (Round 3): Analysing the temporal conflict.\\n\\nSource A states: \"India\\'s National Education Policy was introduced in 2020, approved by the Union Cabinet on 29 July 2020.\"\\nSource B states: \"India\\'s National Education Policy was introduced in 1986 under Prime Minister Rajiv Gandhi.\"\\n\\nThese claims refer to different time points. The date metadata confirms this is a genuine temporal disagreement, not a factual error. To resolve this, we must determine which date is most relevant to the query. The more recent and primary source should take precedence unless the query specifically targets a historical date.', evidence_refs=['agent_a', 'agent_b'], conflict_type=<ConflictType.TEMPORAL: 'temporal'>, strategy_used='temporal', strategy_text_preview='You are arguing about a temporal disagreement.\\nIMPORTANT: The query may specify a particular date or time period (see QUERY PERIOD below).\\nFor each claim, check its recorded date. If a claim is dated ', created_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 573229)) critic_arguments=[DebateArgument(id='82e19546', round_number=3, role='critic', agent_id='critic_1', content='Critique 1 (Round 3): The proposal correctly identifies the temporal gap but does not weigh source authority. The more recent official source (2020) reflects current policy, while the 1986 reference describes a superseded framework. The proposal should explicitly state which is the operative answer.', evidence_refs=[], conflict_type=<ConflictType.TEMPORAL: 'temporal'>, strategy_used='critique_substantive', strategy_text_preview=None, created_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 573261)), DebateArgument(id='8fa1d476', round_number=3, role='critic', agent_id='critic_2', content='Critique 2 (Round 3): The proposal omits that both dates may be correct \u2014 1986 was a real policy, 2020 is the current one. The answer depends entirely on whether the query asks about the original or current policy.', evidence_refs=[], conflict_type=<ConflictType.TEMPORAL: 'temporal'>, strategy_used='critique_substantive', strategy_text_preview=None, created_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 573274))] reviser_argument=DebateArgument(id='709f4ac7', round_number=3, role='reviser', agent_id='reviser', content='Revised Position (Round 3): Incorporating both critiques \u2014 the conflict is temporal, not factual. Both dates (1986 and 2020) are historically accurate. The current operative answer is 2020, as this is the most recent and active policy. The 1986 policy is superseded. Resolution: answer with the 2020 date, noting 1986 as the original framework.', evidence_refs=[], conflict_type=<ConflictType.TEMPORAL: 'temporal'>, strategy_used='temporal_revision', strategy_text_preview=None, created_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 573320)) started_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 573179) completed_at=datetime.datetime(2026, 9, 27, 19, 16, 1, 573328)"
+    ],
+    "passed": true,
+    "latency_seconds": 0.0034711360931396484,
+    "llm_calls": 0
+  },
+  "Agent Registration": {
+    "registered_agents": [
+      "web_agent",
+      "reference_agent",
+      "scholarly_agent",
+      "news_agent",
+      "code_agent",
+      "factcheck_agent",
+      "social_agent",
+      "video_agent",
+      "wiki_agent"
+    ],
+    "count": 9,
+    "passed": true
+  },
+  "Query Routing": {
+    "test_cases": [
+      {
+        "query": "What is Python?",
+        "expected_type": "general",
+        "agents": [
+          "web_agent",
+          "wiki_agent",
+          "code_agent",
+          "scholarly_agent"
+        ],
+        "reasoning": "Code query \u2014 routing to WEB + WIKI + CODE + SCHOLARLY agents",
+        "passed": true
+      },
+      {
+        "query": "What does this GitHub repo do?",
+        "expected_type": "code",
+        "agents": [
+          "web_agent",
+          "wiki_agent",
+          "code_agent",
+          "scholarly_agent"
+        ],
+        "reasoning": "Code query \u2014 routing to WEB + WIKI + CODE + SCHOLARLY agents",
+        "passed": true
+      },
+      {
+        "query": "What are the latest news?",
+        "expected_type": "news",
+        "agents": [
+          "web_agent",
+          "news_agent",
+          "wiki_agent",
+          "social_agent"
+        ],
+        "reasoning": "News query \u2014 routing to WEB + NEWS + WIKI + SOCIAL agents",
+        "passed": true
+      },
+      {
+        "query": "Is this fact true?",
+        "expected_type": "factcheck",
+        "agents": [
+          "web_agent",
+          "factcheck_agent",
+          "wiki_agent",
+          "scholarly_agent"
+        ],
+        "reasoning": "Fact-check query \u2014 routing to WEB + FACTCHECK + WIKI + SCHOLARLY agents",
+        "passed": true
+      },
+      {
+        "query": "What do people think?",
+        "expected_type": "opinion",
+        "agents": [
+          "web_agent",
+          "social_agent",
+          "news_agent"
+        ],
+        "reasoning": "Opinion query \u2014 routing to WEB + SOCIAL + NEWS agents",
+        "passed": true
+      },
+      {
+        "query": "What does the research say?",
+        "expected_type": "scholarly",
+        "agents": [
+          "web_agent",
+          "wiki_agent",
+          "reference_agent",
+          "news_agent"
+        ],
+        "reasoning": "General query \u2014 routing to WEB + WIKI + REFERENCE + NEWS agents",
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "Live Mode Groq": {
+    "query": "What is the capital of France?",
+    "evidence_state": "insufficient",
+    "debate_triggered": false,
+    "answer": "Insufficient evidence was retrieved to answer this query. Failed agents: wiki_agent (Retry also failed: Client error '429 Your bot is making too many requests. Please reduce your request rate or conta",
+    "latency_seconds": 3.192894697189331,
+    "llm_calls_ok": 3,
+    "llm_calls_failed": 0,
+    "usable_agents": 1,
+    "error": null,
+    "passed": true
+  },
+  "NLI Detector": {
+    "test_cases": [
+      {
+        "text_a": "The policy was introduced in 2019",
+        "text_b": "The policy was introduced in 2020",
+        "expected": "contradiction",
+        "predicted": "contradiction",
+        "passed": true
+      },
+      {
+        "text_a": "Python 3.13 supports X",
+        "text_b": "Python 3.14 supports Y",
+        "expected": "contradiction",
+        "predicted": "contradiction",
+        "passed": true
+      },
+      {
+        "text_a": "Dogs are mammals",
+        "text_b": "Cats are pets",
+        "expected": "neutral",
+        "predicted": "neutral",
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "Conflict Classifier": {
+    "test_cases": [
+      {
+        "claim_a": "Python 3.13 supports X",
+        "claim_b": "Python 3.14 supports Y",
+        "expected_type": "version",
+        "classified_type": "version",
+        "confidence": 0.85,
+        "passed": true
+      },
+      {
+        "claim_a": "The policy was introduced in 2019",
+        "claim_b": "The policy was introduced in 2020",
+        "expected_type": "temporal",
+        "classified_type": "temporal",
+        "confidence": 0.88,
+        "passed": true
+      },
+      {
+        "claim_a": "Water boils at 100C",
+        "claim_b": "Water boils at 90C",
+        "expected_type": "factual",
+        "classified_type": "factual",
+        "confidence": 0.75,
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "Evidence Aggregator": {
+    "agreement_test": {
+      "state": "agreement",
+      "passed": true
+    },
+    "insufficient_test": {
+      "state": "insufficient",
+      "passed": true
+    },
+    "passed": true
+  },
+  "Debate Manager": {
+    "status": "completed",
+    "rounds_used": 3,
+    "stop_reason": "max_rounds",
+    "passed": true
+  },
+  "Judge": {
+    "winner": "candidate_1",
+    "confidence": 0.82,
+    "passed": true
+  }
+}

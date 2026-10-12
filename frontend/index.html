@@ -4,64 +4,310 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Evidence-MAD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Work+Sans:wght@400;600&family=Space+Mono&display=swap" rel="stylesheet" />
   <style>
-    :root { --bg:#08111f; --panel:#101d31; --panel2:#15253d; --text:#edf4ff; --muted:#91a4bd; --accent:#54d2b0; --warn:#ffca72; --danger:#ff8a8a; }
-    * { box-sizing:border-box; } body { margin:0; background:radial-gradient(circle at 15% 0%,#173558 0,#08111f 38%); color:var(--text); font:15px/1.55 Inter,ui-sans-serif,system-ui,sans-serif; }
-    main { max-width:1120px; margin:0 auto; padding:48px 22px 80px; } .eyebrow { color:var(--accent); letter-spacing:.14em; text-transform:uppercase; font-size:12px; font-weight:800; }
-    h1 { font-size:clamp(34px,6vw,64px); line-height:1.02; margin:12px 0 16px; max-width:780px; } h2 { margin:0 0 12px; font-size:20px; } p { color:var(--muted); }
-    .hero { margin-bottom:28px; } .hero p { max-width:720px; font-size:17px; } .card { background:rgba(16,29,49,.88); border:1px solid #223653; border-radius:18px; padding:22px; box-shadow:0 16px 50px #0003; margin-top:18px; }
-    textarea { width:100%; min-height:110px; resize:vertical; border:1px solid #2c4566; border-radius:12px; background:#091525; color:var(--text); padding:14px; font:inherit; outline:none; } textarea:focus { border-color:var(--accent); }
-    .toolbar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:14px; } button { border:0; border-radius:10px; padding:11px 18px; font-weight:800; cursor:pointer; background:var(--accent); color:#062018; } button:disabled { cursor:wait; opacity:.6; }
-    label { color:var(--muted); display:flex; gap:8px; align-items:center; } input[type=checkbox] { accent-color:var(--accent); width:17px; height:17px; }
-    .status { color:var(--muted); min-height:24px; } .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:16px; } .metric { background:var(--panel2); border-radius:12px; padding:14px; } .metric small { display:block; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-size:10px; } .metric strong { display:block; margin-top:5px; font-size:22px; }
-    .answer { white-space:pre-wrap; font-size:16px; color:#f4f8ff; } .pill { display:inline-block; border-radius:999px; padding:3px 10px; background:#173d3b; color:var(--accent); font-weight:800; font-size:12px; } .pill.warn { background:#49371b; color:var(--warn); } .pill.danger { background:#482728; color:var(--danger); }
-    ul { padding-left:22px; } li { margin:8px 0; color:var(--muted); } a { color:var(--accent); } details { margin-top:16px; } pre { overflow:auto; background:#07101c; padding:14px; border-radius:10px; color:#b9cbe0; font-size:12px; }
-    .hidden { display:none; } .error { color:var(--danger); } footer { margin-top:35px; color:var(--muted); font-size:12px; }
+    :root {
+      --black: #000000;
+      --white: #FFFFFF;
+      --blue: #0000FF;
+      --success: #008000;
+      --warning: #FFA500;
+      --error: #FF0000;
+      --border-thin: 1px solid var(--black);
+      --border-thick: 3px solid var(--black);
+      --border-heavy: 5px solid var(--black);
+      --sunken: #F0F0F0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0 !important; }
+    body {
+      background: var(--white);
+      color: var(--black);
+      font: 16px/1.6 'Work Sans', sans-serif;
+      min-height: 100vh;
+    }
+    main { max-width: 1100px; margin: 0 auto; padding: 64px 24px 80px; }
+
+    h1 { font: 48px/1.05 'Archivo Black', sans-serif; margin-bottom: 16px; }
+    h2 { font: 32px/1.1 'Archivo Black', sans-serif; margin-bottom: 12px; }
+    h3 { font: 22px/1.2 'Work Sans', sans-serif; font-weight: 600; }
+    p, li { font: 16px/1.6 'Work Sans', sans-serif; }
+    .mono { font: 15px/1.5 'Space Mono', monospace; }
+    .small { font: 14px/1.5 'Work Sans', sans-serif; }
+    .tiny { font: 12px/1.4 'Work Sans', sans-serif; }
+
+    a { color: var(--blue); text-decoration: underline; }
+    a:hover { text-decoration: none; }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      background: var(--black);
+      color: var(--white);
+      border: var(--border-thick);
+      padding: 10px 24px;
+      font: 600 14px 'Work Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { background: var(--white); color: var(--black); }
+    .btn:active { border: var(--border-heavy); }
+    .btn-secondary { background: var(--white); color: var(--black); }
+    .btn-secondary:hover { background: var(--black); color: var(--white); }
+    .btn-ghost { background: transparent; color: var(--black); border: none; text-decoration: underline; }
+    .btn-ghost:hover { color: var(--blue); }
+    .btn-destructive { background: var(--error); color: var(--white); }
+    .btn-destructive:hover { background: var(--black); color: var(--error); }
+    .btn:disabled { background: var(--sunken); color: #999; border: 3px solid #CCC; cursor: not-allowed; }
+
+    /* Cards */
+    .card {
+      background: var(--white);
+      border: var(--border-thick);
+      padding: 24px;
+      margin-top: 16px;
+    }
+    .card-elevated { border: var(--border-heavy); }
+
+    /* Inputs */
+    input[type="text"], textarea, select {
+      width: 100%;
+      background: var(--sunken);
+      border: var(--border-thick);
+      color: var(--black);
+      padding: 10px 12px;
+      font: 15px 'Space Mono', monospace;
+      outline: none;
+    }
+    input[type="text"]:hover, textarea:hover { background: #E8E8E8; }
+    input[type="text"]:focus, textarea:focus { border: var(--border-heavy); }
+    textarea { min-height: 100px; resize: vertical; }
+
+    label {
+      display: block;
+      font: 14px 'Archivo Black', sans-serif;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    /* Chips */
+    .chip {
+      display: inline-block;
+      background: var(--white);
+      color: var(--black);
+      border: 2px solid var(--black);
+      padding: 2px 10px;
+      font: 600 11px 'Work Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .chip-active { background: var(--black); color: var(--white); }
+    .chip-success { border-color: var(--success); color: var(--success); }
+    .chip-warning { border-color: var(--warning); color: var(--warning); }
+    .chip-error { border-color: var(--error); color: var(--error); }
+
+    /* Metrics */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .metric {
+      background: var(--sunken);
+      border: var(--border-thick);
+      padding: 16px;
+    }
+    .metric .label {
+      font: 12px 'Work Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: block;
+    }
+    .metric .value {
+      font: 28px 'Archivo Black', sans-serif;
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* Status */
+    .status { font: 14px 'Space Mono', monospace; }
+    .error { color: var(--error); }
+    .success { color: var(--success); }
+
+    /* Checkbox */
+    input[type="checkbox"] {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: var(--border-thick);
+      background: var(--white);
+      cursor: pointer;
+      position: relative;
+    }
+    input[type="checkbox"]:checked { background: var(--black); }
+    input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      left: 5px; top: 2px;
+      width: 4px; height: 10px;
+      border: solid var(--white);
+      border-width: 0 3px 3px 0;
+      transform: rotate(45deg);
+    }
+
+    /* Results */
+    .hidden { display: none !important; }
+    .answer-text { white-space: pre-wrap; font-size: 16px; }
+    .pill {
+      display: inline-block;
+      background: var(--black);
+      color: var(--white);
+      padding: 2px 10px;
+      font: 600 11px 'Work Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .pill-warning { background: var(--warning); color: var(--black); }
+    .pill-error { background: var(--error); color: var(--white); }
+    .pill-success { background: var(--success); color: var(--white); }
+
+    details { margin-top: 16px; }
+    summary { cursor: pointer; font: 600 14px 'Work Sans', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+    pre {
+      overflow: auto;
+      background: var(--sunken);
+      border: var(--border-thin);
+      padding: 16px;
+      font: 12px 'Space Mono', monospace;
+      margin-top: 8px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .video-link {
+      display: inline-block;
+      margin-top: 24px;
+      background: var(--white);
+      color: var(--black);
+      border: var(--border-thick);
+      padding: 10px 24px;
+      font: 600 14px 'Work Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-decoration: none;
+    }
+    .video-link:hover { background: var(--black); color: var(--white); }
+
+    footer { margin-top: 40px; font: 12px 'Work Sans', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
   </style>
 </head>
 <body>
-<main>
-  <section class="hero"><div class="eyebrow">Research prototype · Evidence-MAD</div><h1>Debate only when the evidence disagrees.</h1><p>Ask a question, retrieve independent evidence, and inspect exactly why the system skipped or triggered debate.</p></section>
-  <section class="card">
-    <h2>Ask the system</h2>
-    <textarea id="query" placeholder="Try: What is Python?&#10;Or: When was the policy introduced?">What is Python?</textarea>
-    <div class="toolbar"><button id="solve">Solve question</button><label><input id="demo" type="checkbox" checked /> Demo mode (offline)</label><span id="status" class="status"></span></div>
-  </section>
-  <section id="result" class="hidden">
-    <div class="card"><h2>Decision</h2><div id="decision"></div><div class="grid" id="metrics"></div></div>
-    <div class="card"><h2>Answer</h2><div id="answer" class="answer"></div></div>
-    <div class="card"><h2>Evidence and sources</h2><div id="evidence"></div><div id="sources"></div></div>
-    <div class="card"><h2>Execution trace</h2><details><summary>Show raw JSON trace</summary><pre id="trace"></pre></details></div>
-  </section>
-  <footer>Evidence-MAD · Evidence-triggered debate with conflict-type-aware strategies.</footer>
-</main>
-<script>
-const $ = id => document.getElementById(id);
-function esc(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
-function metric(label, value) { return `<div class="metric"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`; }
-function render(data) {
-  $('result').classList.remove('hidden');
-  const conflict = data.conflict_type;
-  $('decision').innerHTML = data.debate_triggered ? `<span class="pill warn">DEBATE TRIGGERED</span> <span class="pill">${esc(conflict || 'classified')}</span>` : `<span class="pill">EVIDENCE AGREES · DEBATE SKIPPED</span>`;
-  const m = data.metrics || {};
-  $('metrics').innerHTML = [metric('Contradiction score', Number(m.contradiction_score || 0).toFixed(3)), metric('Debate rounds', m.debate_rounds || 0), metric('LLM calls', m.total_llm_calls || 0), metric('Latency', `${Number(m.latency_seconds || 0).toFixed(2)}s`)].join('');
-  $('answer').textContent = `${data.answer}\n\n${data.reasoning || ''}`;
-  $('evidence').innerHTML = (data.evidence || []).map(e => `<h3>${esc(e.agent_id)}</h3><ul>${(e.claims || []).map(c => `<li>${esc(c.text)}</li>`).join('')}</ul>`).join('') || '<p>No evidence returned.</p>';
-  $('sources').innerHTML = '<h3>Sources</h3><ol>' + (data.sources || []).map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noreferrer">${esc(s.title || s.url)}</a></li>`).join('') + '</ol>';
-  $('trace').textContent = JSON.stringify(data, null, 2);
-}
-$('solve').addEventListener('click', async () => {
-  const query = $('query').value.trim(); if (!query) return;
-  $('solve').disabled = true; $('status').textContent = 'Retrieving independent evidence…'; $('status').className = 'status';
-  try {
-    const apiBase = location.port === '3000' ? 'http://localhost:8000' : '';
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 45000);
-    const response = await fetch(apiBase + '/api/solve', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query, demo_mode:$('demo').checked}), signal: controller.signal });
-    clearTimeout(timeout);
-    const data = await response.json(); if (!response.ok) throw new Error(data.detail || 'Request failed'); render(data); $('status').textContent = 'Completed';
-  } catch (error) { $('status').innerHTML = `<span class="error">${esc(error.message)}</span>`; } finally { $('solve').disabled = false; }
-});
-</script>
+  <main>
+    <h1>Evidence-MAD</h1>
+    <p class="small" style="max-width:640px;margin-bottom:24px;">
+      Evidence-triggered multi-agent debate. Ask a question, retrieve independent evidence, and inspect exactly why the system skipped or triggered debate.
+    </p>
+
+    <div class="card">
+      <h3>Ask the system</h3>
+      <label for="query">Query</label>
+      <textarea id="query" placeholder="Try: What is Python?">What is Python?</textarea>
+      <div class="toolbar">
+        <button class="btn" id="solve">Solve</button>
+        <label class="tiny" style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;">
+          <input type="checkbox" id="demo" checked /> Demo mode (offline)
+        </label>
+        <span id="status" class="status"></span>
+      </div>
+    </div>
+
+    <a href="video.html" class="video-link">Video Fact-Check Mode</a>
+
+    <section id="result" class="hidden">
+      <div class="card card-elevated">
+        <h3>Decision</h3>
+        <div id="decision"></div>
+        <div class="metrics" id="metrics"></div>
+      </div>
+      <div class="card">
+        <h3>Answer</h3>
+        <div id="answer" class="answer-text"></div>
+      </div>
+      <div class="card">
+        <h3>Evidence & Sources</h3>
+        <div id="evidence"></div>
+        <div id="sources" style="margin-top:16px;"></div>
+      </div>
+      <div class="card">
+        <h3>Execution Trace</h3>
+        <details>
+          <summary>Show JSON</summary>
+          <pre id="trace"></pre>
+        </details>
+      </div>
+    </section>
+
+    <footer>Evidence-MAD &middot; Evidence-triggered debate with conflict-type-aware strategies</footer>
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+    function metric(label, value) { return `<div class="metric"><span class="label">${esc(label)}</span><span class="value">${esc(value)}</span></div>`; }
+
+    function render(data) {
+      $('result').classList.remove('hidden');
+      const conflict = data.conflict_type;
+      $('decision').innerHTML = data.debate_triggered
+        ? `<span class="pill pill-warning">DEBATE TRIGGERED</span> <span class="chip">${esc(conflict || 'classified')}</span>`
+        : `<span class="pill pill-success">EVIDENCE AGREES &middot; DEBATE SKIPPED</span>`;
+      const m = data.metrics || {};
+      $('metrics').innerHTML = [
+        metric('Contradiction', Number(m.contradiction_score || 0).toFixed(3)),
+        metric('Debate Rounds', m.debate_rounds || 0),
+        metric('LLM Calls', m.total_llm_calls || 0),
+        metric('Latency', `${Number(m.latency_seconds || 0).toFixed(2)}s`),
+      ].join('');
+      $('answer').textContent = `${data.answer}\n\n${data.reasoning || ''}`;
+      $('evidence').innerHTML = (data.evidence || []).map(e =>
+        `<h3 style="margin-top:12px;">${esc(e.agent_id)}</h3><ul style="padding-left:20px;">${(e.claims || []).map(c => `<li>${esc(c.text)}</li>`).join('')}</ul>`
+      ).join('') || '<p>No evidence returned.</p>';
+      $('sources').innerHTML = '<h3 style="margin-bottom:8px;">Sources</h3><ol style="padding-left:20px;">' +
+        (data.sources || []).map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noreferrer">${esc(s.title || s.url)}</a></li>`).join('') + '</ol>';
+      $('trace').textContent = JSON.stringify(data, null, 2);
+    }
+
+    $('solve').addEventListener('click', async () => {
+      const query = $('query').value.trim();
+      if (!query) return;
+      $('solve').disabled = true;
+      $('status').innerHTML = 'Retrieving&hellip;';
+      try {
+        const apiBase = location.port === '3000' ? 'http://127.0.0.1:8000' : '';
+        const response = await fetch(apiBase + '/api/solve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, demo_mode: $('demo').checked }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || 'Request failed');
+        render(data);
+        $('status').innerHTML = '<span class="success">Completed</span>';
+      } catch (err) {
+        $('status').innerHTML = `<span class="error">${esc(err.message)}</span>`;
+      } finally {
+        $('solve').disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>

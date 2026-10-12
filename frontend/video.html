@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Video Fact-Check — Evidence-MAD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Work+Sans:wght@400;600&family=Space+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --black: #000000;
+      --white: #FFFFFF;
+      --blue: #0000FF;
+      --success: #008000;
+      --warning: #FFA500;
+      --error: #FF0000;
+      --border-thin: 1px solid var(--black);
+      --border-thick: 3px solid var(--black);
+      --border-heavy: 5px solid var(--black);
+      --sunken: #F0F0F0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0 !important; }
+    body {
+      background: var(--white);
+      color: var(--black);
+      font: 16px/1.6 'Work Sans', sans-serif;
+      min-height: 100vh;
+    }
+    main { max-width: 1100px; margin: 0 auto; padding: 64px 24px 80px; }
+
+    h1 { font: 48px/1.05 'Archivo Black', sans-serif; margin-bottom: 16px; }
+    h2 { font: 32px/1.1 'Archivo Black', sans-serif; margin-bottom: 12px; }
+    h3 { font: 22px/1.2 'Work Sans', sans-serif; font-weight: 600; }
+    p, li { font: 16px/1.6 'Work Sans', sans-serif; }
+    .mono { font: 15px/1.5 'Space Mono', monospace; }
+    .small { font: 14px/1.5 'Work Sans', sans-serif; }
+    .tiny { font: 12px/1.4 'Work Sans', sans-serif; }
+
+    a { color: var(--blue); text-decoration: underline; }
+    a:hover { text-decoration: none; }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      background: var(--black);
+      color: var(--white);
+      border: var(--border-thick);
+      padding: 10px 24px;
+      font: 600 14px 'Work Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { background: var(--white); color: var(--black); }
+    .btn:active { border: var(--border-heavy); }
+    .btn-secondary { background: var(--white); color: var(--black); }
+    .btn-secondary:hover { background: var(--black); color: var(--white); }
+    .btn:disabled { background: var(--sunken); color: #999; border: 3px solid #CCC; cursor: not-allowed; }
+
+    /* Cards */
+    .card {
+      background: var(--white);
+      border: var(--border-thick);
+      padding: 24px;
+      margin-top: 16px;
+    }
+    .card-elevated { border: var(--border-heavy); }
+
+    /* Inputs */
+    input[type="text"], textarea, select {
+      width: 100%;
+      background: var(--sunken);
+      border: var(--border-thick);
+      color: var(--black);
+      padding: 10px 12px;
+      font: 15px 'Space Mono', monospace;
+      outline: none;
+    }
+    input:hover, textarea:hover, select:hover { background: #E8E8E8; }
+    input:focus, textarea:focus, select:focus { border: var(--border-heavy); }
+
+    label {
+      display: block;
+      font: 14px 'Archivo Black', sans-serif;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    /* Chips */
+    .chip {
+      display: inline-block;
+      background: var(--white);
+      color: var(--black);
+      border: 2px solid var(--black);
+      padding: 2px 10px;
+      font: 600 11px 'Work Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .chip-active { background: var(--black); color: var(--white); }
+    .chip-success { border-color: var(--success); color: var(--success); }
+    .chip-warning { border-color: var(--warning); color: var(--warning); }
+    .chip-error { border-color: var(--error); color: var(--error); }
+
+    /* Upload zone */
+    .upload-zone {
+      border: var(--border-heavy);
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      background: var(--white);
+      transition: background 0.1s;
+    }
+    .upload-zone:hover, .upload-zone.dragover { background: var(--sunken); }
+    .upload-zone input { display: none; }
+
+    /* Metrics */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .metric {
+      background: var(--sunken);
+      border: var(--border-thick);
+      padding: 16px;
+      text-align: center;
+    }
+    .metric .label {
+      font: 12px 'Work Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: block;
+    }
+    .metric .value {
+      font: 28px 'Archivo Black', sans-serif;
+      display: block;
+      margin-top: 4px;
+    }
+    .metric.supported .value { color: var(--success); }
+    .metric.refuted .value { color: var(--error); }
+    .metric.neutral .value { color: var(--warning); }
+    .metric.total .value { color: var(--blue); }
+
+    /* Speakers */
+    .speaker-list { display: flex; gap: 12px; flex-wrap: wrap; }
+    .speaker-card {
+      background: var(--sunken);
+      border: var(--border-thick);
+      padding: 16px;
+      min-width: 160px;
+      flex: 1;
+    }
+
+    /* Transcript */
+    .transcript { max-height: 360px; overflow-y: auto; }
+    .transcript-segment {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: var(--border-thin);
+    }
+    .transcript-segment:last-child { border-bottom: none; }
+    .transcript-segment .timestamp {
+      font: 11px 'Space Mono', monospace;
+      min-width: 44px;
+      padding-top: 2px;
+    }
+    .transcript-segment .speaker-tag {
+      font: 600 10px 'Work Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 1px 7px;
+      background: var(--black);
+      color: var(--white);
+      margin-bottom: 3px;
+      display: inline-block;
+    }
+
+    /* Fact-check cards */
+    .factcheck-list { display: flex; flex-direction: column; gap: 16px; }
+    .factcheck-card {
+      background: var(--sunken);
+      border: var(--border-thick);
+      padding: 20px;
+      border-left: 5px solid var(--black);
+    }
+    .factcheck-card.supported { border-left-color: var(--success); }
+    .factcheck-card.refuted { border-left-color: var(--error); }
+    .factcheck-card.neutral { border-left-color: var(--warning); }
+    .factcheck-card.unverifiable { border-left-color: #999; }
+
+    .factcheck-card .verdict {
+      display: inline-block;
+      padding: 3px 10px;
+      font: 600 11px 'Work Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      border: 2px solid;
+    }
+    .factcheck-card .verdict.SUPPORTED { border-color: var(--success); color: var(--success); }
+    .factcheck-card .verdict.REFUTED { border-color: var(--error); color: var(--error); }
+    .factcheck-card .verdict.NEUTRAL { border-color: var(--warning); color: var(--warning); }
+    .factcheck-card .verdict.UNVERIFIABLE { border-color: #999; color: #999; }
+    .factcheck-card .verdict.LIKELY_SUPPORTED { border-color: var(--blue); color: var(--blue); }
+    .factcheck-card .verdict.DISPUTED { border-color: var(--blue); color: var(--blue); }
+
+    .factcheck-card .answer {
+      padding: 10px;
+      background: var(--white);
+      border: var(--border-thin);
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    .pill {
+      display: inline-block;
+      background: var(--black);
+      color: var(--white);
+      padding: 2px 10px;
+      font: 600 11px 'Work Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Progress */
+    .progress-container { margin-top: 20px; display: none; }
+    .progress-container.visible { display: block; }
+    .progress-bar {
+      height: 8px;
+      background: var(--sunken);
+      border: var(--border-thick);
+      overflow: hidden;
+    }
+    .progress-bar .fill {
+      height: 100%;
+      background: var(--black);
+      transition: width 0.3s;
+      width: 0%;
+    }
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #CCC;
+      border-top-color: var(--black);
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-box {
+      background: var(--white);
+      border: 3px solid var(--error);
+      padding: 12px 16px;
+      color: var(--error);
+      font-size: 13px;
+      margin-top: 14px;
+    }
+
+    .demo-notice {
+      background: var(--white);
+      border: 3px solid var(--warning);
+      padding: 8px 14px;
+      font-size: 12px;
+      color: var(--warning);
+      margin-top: 10px;
+    }
+
+    .hidden { display: none !important; }
+
+    .back-link {
+      display: inline-block;
+      color: var(--black);
+      font: 600 14px 'Work Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-decoration: none;
+      border: var(--border-thick);
+      padding: 8px 20px;
+      margin-bottom: 24px;
+    }
+    .back-link:hover { background: var(--black); color: var(--white); }
+
+    .options {
+      display: flex;
+      gap: 20px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+    input[type="checkbox"] {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: var(--border-thick);
+      background: var(--white);
+      cursor: pointer;
+      position: relative;
+    }
+    input[type="checkbox"]:checked { background: var(--black); }
+    input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      left: 5px; top: 2px;
+      width: 4px; height: 10px;
+      border: solid var(--white);
+      border-width: 0 3px 3px 0;
+      transform: rotate(45deg);
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--sunken); }
+    ::-webkit-scrollbar-thumb { background: var(--black); }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="index.html" class="back-link">&larr; Text Mode</a>
+    <h1>Video Fact-Check</h1>
+
+    <!-- Upload -->
+    <section id="upload-section">
+      <label class="upload-zone" id="upload-zone" for="file-input">
+        <input type="file" id="file-input" accept="video/*" />
+        <h3>Drop a video here or click to browse</h3>
+        <p class="small">Transcribe &middot; Identify speakers &middot; Extract claims &middot; Fact-check</p>
+      </label>
+
+      <div class="options">
+        <div class="option">
+          <label for="whisper-model" style="margin:0;">Model</label>
+          <select id="whisper-model">
+            <option value="tiny">Tiny</option>
+            <option value="base" selected>Base</option>
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+          </select>
+        </div>
+        <div class="option">
+          <input type="checkbox" id="diarization" checked />
+          <label for="diarization" style="margin:0;">Diarization</label>
+        </div>
+      </div>
+
+      <div id="error-box" class="error-box hidden"></div>
+
+      <div id="progress-container" class="progress-container">
+        <div class="progress-bar"><div class="fill" id="progress-fill"></div></div>
+        <p class="tiny" id="progress-text" style="margin-top:6px;"></p>
+      </div>
+
+      <div id="demo-notice" class="demo-notice hidden">
+        <strong>Demo Mode:</strong> Using mock data. Install <code>faster-whisper</code> for real results.
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="results" class="hidden">
+      <div class="metrics" id="metrics-grid"></div>
+
+      <div class="card">
+        <h3>Speakers</h3>
+        <div class="speaker-list" id="speaker-list"></div>
+      </div>
+
+      <div class="card">
+        <h3>Transcript</h3>
+        <div class="transcript" id="transcript"></div>
+      </div>
+
+      <div class="card card-elevated">
+        <h3>Fact-Check Results</h3>
+        <div class="factcheck-list" id="factcheck-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const API_BASE = location.port === '3000' ? 'http://127.0.0.1:8000' : '';
+
+    // Drag and drop
+    const zone = $('upload-zone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+    $('file-input').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) handleFile(file);
+    });
+
+    function handleFile(file) {
+      if (!file.type.startsWith('video/')) {
+        showError('Please upload a video file (MP4, MOV, AVI, etc.)');
+        return;
+      }
+      if (file.size > 500 * 1024 * 1024) {
+        showError('File too large. Maximum size is 500MB.');
+        return;
+      }
+      hideError();
+      uploadAndAnalyze(file);
+    }
+
+    async function uploadAndAnalyze(file) {
+      $('progress-container').classList.add('visible');
+      $('progress-fill').style.width = '10%';
+      $('progress-text').innerHTML = '<span class="spinner"></span>Uploading...';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('whisper_model', $('whisper-model').value);
+      formData.append('use_diarization', $('diarization').checked);
+
+      try {
+        $('progress-fill').style.width = '35%';
+        $('progress-text').innerHTML = '<span class="spinner"></span>Processing video...';
+
+        const response = await fetch(API_BASE + '/api/video/analyze-sync', {
+          method: 'POST',
+          body: formData,
+        });
+
+        $('progress-fill').style.width = '75%';
+        $('progress-text').innerHTML = '<span class="spinner"></span>Fact-checking claims...';
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({ detail: 'Request failed' }));
+          throw new Error(err.detail || 'HTTP ' + response.status);
+        }
+
+        const data = await response.json();
+        $('progress-fill').style.width = '100%';
+        $('progress-text').textContent = 'Complete!';
+        $('demo-notice').classList.remove('hidden');
+        renderResults(data);
+
+      } catch (err) {
+        showError(err.message);
+        $('progress-fill').style.width = '0%';
+        $('progress-text').textContent = '';
+      }
+    }
+
+    function renderResults(data) {
+      $('upload-section').classList.add('hidden');
+      $('results').classList.remove('hidden');
+
+      const m = data.metrics || {};
+      $('metrics-grid').innerHTML = `
+        <div class="metric total"><div class="value">${m.total_claims || 0}</div><span class="label">Claims</span></div>
+        <div class="metric"><div class="value">${m.total_speakers || 0}</div><span class="label">Speakers</span></div>
+        <div class="metric supported"><div class="value">${m.supported_count || 0}</div><span class="label">Supported</span></div>
+        <div class="metric refuted"><div class="value">${m.refuted_count || 0}</div><span class="label">Refuted</span></div>
+        <div class="metric neutral"><div class="value">${m.neutral_count || 0}</div><span class="label">Neutral</span></div>
+        <div class="metric"><div class="value">${m.unverifiable_count || 0}</div><span class="label">Unverifiable</span></div>
+        <div class="metric"><div class="value">${m.debate_triggered_count || 0}</div><span class="label">Debates</span></div>
+        <div class="metric"><div class="value">${formatDuration(data.duration_seconds)}</div><span class="label">Duration</span></div>
+      `;
+
+      $('speaker-list').innerHTML = (data.speakers || []).map(sp => `
+        <div class="speaker-card">
+          <h3 style="color:var(--blue);margin-bottom:4px;">${esc(sp.speaker_id)}</h3>
+          <p class="small">${sp.segment_count} segments &middot; ${formatDuration(sp.total_duration)}</p>
+          <p class="small" style="font-style:italic;margin-top:4px;">"${esc(sp.sample_text)}"</p>
+        </div>
+      `).join('') || '<p>No speakers identified.</p>';
+
+      $('transcript').innerHTML = (data.transcript || []).map(seg => `
+        <div class="transcript-segment">
+          <span class="timestamp">${esc(seg.timestamp)}</span>
+          <div>
+            <span class="speaker-tag">${esc(seg.speaker)}</span>
+            <p style="font-size:14px;">${esc(seg.text)}</p>
+          </div>
+        </div>
+      `).join('') || '<p>No transcript available.</p>';
+
+      $('factcheck-list').innerHTML = (data.fact_checks || []).map(fc => {
+        const v = fc.verdict.toLowerCase();
+        const vClass = v.includes('supported') ? 'supported'
+          : v.includes('refuted') || v.includes('disputed') ? 'refuted'
+          : fc.verdict === 'NEUTRAL' ? 'neutral'
+          : 'unverifiable';
+
+        const sourcesHtml = (fc.sources || []).length
+          ? `<div style="margin-top:10px;"><strong>Sources</strong><ul style="padding-left:18px;margin-top:4px;">${fc.sources.map(s =>
+              `<li><a href="${esc(s.url)}" target="_blank" rel="noreferrer">${esc(s.title || s.url)}</a></li>`
+            ).join('')}</ul></div>` : '';
+
+        const debateInfo = fc.debate_triggered
+          ? `<p class="tiny" style="color:var(--blue);margin-top:6px;">&#9876; Debate &middot; ${esc(fc.conflict_type || 'unknown')}</p>` : '';
+
+        return `
+          <div class="factcheck-card ${vClass}">
+            <p style="font-size:14px;font-weight:600;margin-bottom:6px;">"${esc(fc.text)}"</p>
+            <p class="tiny" style="margin-bottom:10px;">&#128101; ${esc(fc.speaker)} &middot; &#9200; ${esc(fc.timestamp)}</p>
+            <span class="verdict ${fc.verdict}">${esc(fc.verdict.replace(/_/g, ' '))}</span>
+            ${fc.answer ? `<div class="answer">${esc(fc.answer)}</div>` : ''}
+            ${debateInfo}
+            ${sourcesHtml}
+          </div>`;
+      }).join('') || '<p>No claims were extracted from this video.</p>';
+    }
+
+    function formatDuration(sec) {
+      if (!sec) return '0:00';
+      const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+      return `${m}:${String(s).padStart(2,'0')}`;
+    }
+
+    function esc(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+      }[c]));
+    }
+
+    function showError(msg) {
+      $('error-box').textContent = msg;
+      $('error-box').classList.remove('hidden');
+    }
+    function hideError() { $('error-box').classList.add('hidden'); }
+  </script>
+</body>
+</html>

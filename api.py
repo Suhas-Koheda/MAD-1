@@ -11,18 +11,22 @@ from typing import Optional, Dict, Any
 from loguru import logger
 
 from app import solve as sync_solve
+from api_video import router as video_router
 
 app = FastAPI(
     title="Multi-Agent Debate API",
     description="Evidence-triggered debate with conflict classification",
-    version="2.0.0",
+    version="3.0.0",
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_methods=["POST", "GET"],
     allow_headers=["Content-Type"],
 )
+
+# Include video router
+app.include_router(video_router)
 
 
 class QueryRequest(BaseModel):
@@ -48,8 +52,9 @@ async def root():
     """Health check endpoint."""
     return {
         "name": "Multi-Agent Debate API",
-        "version": "2.0.0",
+        "version": "3.0.0",
         "status": "running",
+        "endpoints": ["/api/solve", "/api/video/upload", "/api/video/analyze-sync", "/health", "/docs"],
     }
 
 
@@ -57,6 +62,23 @@ async def root():
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
+
+
+@app.get("/api/agents")
+async def list_agents():
+    """List all registered search agents."""
+    from agents.base_agent import registry
+    from agents.router import router
+    router.initialize()
+    agents = []
+    for agent in registry.get_all():
+        agents.append({
+            "agent_id": agent.agent_id,
+            "name": agent.config.name,
+            "description": agent.config.description,
+            "provider": getattr(agent.config, "provider", "unknown"),
+        })
+    return {"agents": agents, "count": len(agents)}
 
 
 @app.post("/api/solve", response_model=QueryResponse)

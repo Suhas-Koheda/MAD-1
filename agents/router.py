@@ -10,6 +10,12 @@ from loguru import logger
 
 from agents.base_agent import BaseAgent, registry
 from agents.search_agent import WebAgent, ReferenceAgent, ScholarlyAgent
+from agents.news_agent import NewsAgent
+from agents.code_agent import CodeAgent
+from agents.factcheck_agent import FactCheckAgent
+from agents.social_agent import SocialAgent
+from agents.video_agent import VideoAgent
+from agents.wiki_agent import WikiAgent
 from config import settings
 
 
@@ -48,27 +54,48 @@ class QueryRouter:
         self._initialized = False
 
     def initialize(self) -> None:
-        """Register the three agents (idempotent)."""
+        """Register all agents (idempotent)."""
         if self._initialized:
             return
         registry.clear()
         registry.register(WebAgent())
         registry.register(ReferenceAgent())
         registry.register(ScholarlyAgent())
+        registry.register(NewsAgent())
+        registry.register(CodeAgent())
+        registry.register(FactCheckAgent())
+        registry.register(SocialAgent())
+        registry.register(VideoAgent())
+        registry.register(WikiAgent())
         self._initialized = True
-        logger.info(f"Router initialized with agents: {registry.list_ids()}")
+        logger.info(f"Router initialized with {len(registry.list_ids())} agents: {registry.list_ids()}")
 
     def route(self, query: str) -> RoutingDecision:
         """Determine which agents to use for a query."""
         self.initialize()
 
+        q = query.lower()
+
+        # Determine which agents to activate based on query type
         if _is_scholarly(query):
-            agents = registry.list_ids()   # all three
-            reasoning = "Scholarly query — routing to WEB + REFERENCE + SCHOLARLY agents"
+            agents = registry.list_ids()  # all agents
+            reasoning = "Scholarly query — routing to all agents"
+        elif any(kw in q for kw in ["code", "function", "api", "library", "python", "javascript", "bug", "error", "github"]):
+            agents = ["web_agent", "wiki_agent", "code_agent", "scholarly_agent"]
+            reasoning = "Code query — routing to WEB + WIKI + CODE + SCHOLARLY agents"
+        elif any(kw in q for kw in ["news", "recent", "latest", "today", "2024", "2025", "2026"]):
+            agents = ["web_agent", "news_agent", "wiki_agent", "social_agent"]
+            reasoning = "News query — routing to WEB + NEWS + WIKI + SOCIAL agents"
+        elif any(kw in q for kw in ["fact", "true", "false", "verify", "check", "real", "myth"]):
+            agents = ["web_agent", "factcheck_agent", "wiki_agent", "scholarly_agent"]
+            reasoning = "Fact-check query — routing to WEB + FACTCHECK + WIKI + SCHOLARLY agents"
+        elif any(kw in q for kw in ["opinion", "think", "feel", "reddit", "community"]):
+            agents = ["web_agent", "social_agent", "news_agent"]
+            reasoning = "Opinion query — routing to WEB + SOCIAL + NEWS agents"
         else:
-            # Exclude scholarly for general queries
-            agents = [aid for aid in registry.list_ids() if aid != "scholarly_agent"]
-            reasoning = "General query — routing to WEB + REFERENCE agents"
+            # General query — use core agents
+            agents = ["web_agent", "wiki_agent", "reference_agent", "news_agent"]
+            reasoning = "General query — routing to WEB + WIKI + REFERENCE + NEWS agents"
 
         return RoutingDecision(agents=agents, reasoning=reasoning)
 
